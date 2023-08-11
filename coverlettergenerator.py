@@ -13,9 +13,9 @@ def generate_cover_letter(job_description, resume):
     print("ChatGPT Prompt:\n", prompt)
 
     response = openai.Completion.create(
-        engine="text-davinci-003",  # Use Curie model
+        engine="text-davinci-003",  # Use DaVinci model
         prompt=prompt,
-        max_tokens=1000
+        max_tokens=1000 # Alter this to limit number of tokens used
         # stop=["Sincerely,"]
     )
 
