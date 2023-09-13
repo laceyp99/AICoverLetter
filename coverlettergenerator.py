@@ -1,35 +1,13 @@
-import docx
-import os
-import platform
+import os 
 import openai
+import docx
+import platform
 
-
-def generate_cover_letter(job_description, resume):
-    # Set your OpenAI API key here
-    openai.api_key = 'ADD YOUR API KEY HERE'
-
-    prompt = f"Write a cover letter for the following job description:\n{job_description}\n\nHere is my resume:\n{resume}\n\n"
-
-    print("ChatGPT Prompt:\n", prompt)
-
-    response = openai.Completion.create(
-        engine="text-davinci-003",  # Use DaVinci model
-        prompt=prompt,
-        max_tokens=1000 # Alter this to limit number of tokens used
-        # stop=["Sincerely,"]
-    )
-
-    print("ChatGPT Response:\n", response)
-    cover_letter = response.choices[0].text.strip()
-
-    return cover_letter
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
 def create_word_document(cover_letter):
-    custom_header = "ADD A CUSTOM HEADER HERE"
-    final_cover_letter = custom_header + cover_letter
     doc = docx.Document()
-    doc.add_paragraph(final_cover_letter)
-
+    doc.add_paragraph(cover_letter)
     doc.save("cover_letter.docx")
 
 def convert_to_pdf(pdf_filename):
@@ -67,7 +45,25 @@ def convert_to_pdf(pdf_filename):
         content = [Paragraph(cover_letter, styles["Normal"])]
         doc.build(content)
 
-if __name__ == "__main__":
+def revise(cover_letter, messages):
+    # Add the cover letter to the messages list
+    messages.append({"role": "assistant", "content": cover_letter})
+    # Prompt the user to write a revision prompt and add it to the messages list
+    second_prompt = input("Write a revision prompt for the cover letter: ")
+    messages.append({"role": "user", "content": second_prompt})
+    
+    # Get the response from the assistant
+    response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",  # Use the gpt 3.5 model
+        messages=messages,
+        temperature=0.7,
+        max_tokens=1000
+    )
+    print("ChatGPT Response:\n", response)
+    cover_letter = response['choices'][0]['message']['content'].strip()
+    return cover_letter
+
+def generate_cover_letter():
     # Read the job description from the file
     job_description_file = "job_description.txt"
     with open(job_description_file, "r", encoding="utf-8") as f:
@@ -77,19 +73,44 @@ if __name__ == "__main__":
     resume_file = "resume.txt"
     with open(resume_file, "r", encoding="utf-8") as f:
         resume = f.read()
-
     
-    # Generate the cover letter using the provided job description and resume
-    cover_letter = generate_cover_letter(job_description, resume)
-    print("\nGenerated Cover Letter:\n", cover_letter)
+    prompt = f"Write a cover letter for the following job description:\n{job_description}\n\nHere is my resume:\n{resume}\n\n"
+    # Feel free to personalize the system message to include a more knowledgeable assistant in your respective field
+    system_message = "You are a professional recruiter that helps people write cover letters for job applications. You focus on expressing the proper skills and experience for the job in short but effective manner."
+
+    # Starting the conversation
+    messages = [
+        {"role": "system", "content": system_message},
+        {"role": "user", "content": prompt}
+    ]
+
+    # Initial response from the assistant
+    response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",  # Use the gpt 3.5 model
+        messages=messages,
+        temperature=0.7,
+        max_tokens=1000
+    )
+    print("ChatGPT Response:\n", response)
+    cover_letter = response['choices'][0]['message']['content'].strip()
+
+    # write a loop where the user can revise the cover letter
+    while True:
+        yesorno = input("Would you like to revise the cover letter? (y/n): ")
+        if (yesorno == "n" or yesorno == "no"):
+            # Export the cover letter to a Word document and then convert it to a PDF and break out of the loop
+            create_word_document(cover_letter)
+            pdf_filename = input("Enter the PDF filename (without extension): ")
+            convert_to_pdf(pdf_filename)
+            print(f"Cover letter exported to PDF as '{pdf_filename}.pdf'.")
+            break
+        elif (yesorno != "y" and yesorno != "yes" and yesorno != "n" and yesorno != "no"):
+            # Just print an error message and continue the loop
+            print("Invalid input. Please input either y or n.")
+        else:
+            # Revise the cover letter and continue the loop
+            cover_letter = revise(cover_letter, messages)     
     
 
-    create_word_document(cover_letter)
-    print("Cover letter saved as 'cover_letter.docx'.")
-
-    confirm_export_to_pdf = input("Do you want to export the cover letter to PDF? (yes/no): ")
-    if confirm_export_to_pdf.lower() == "yes":
-        # Prompt user to enter the desired PDF filename
-        pdf_filename = input("Enter the PDF filename (without extension): ")
-        convert_to_pdf(pdf_filename)
-        print(f"Cover letter exported to PDF as '{pdf_filename}.pdf'.")
+if __name__ == "__main__":
+    generate_cover_letter()
