@@ -1,5 +1,5 @@
 # AICoverLetter
-An AI Cover Letter Generator that saves hours with fast job specific cover letters exported as .pdf files.
+An AI Cover Letter Generator that saves hours with fast job specific cover letters exported as PDF files. With the new version of the script, there is now a multiple revision functionality. So that way, any issues with formatting or topic focus can be dealt with while running the script and not post-generation. You are able to choose if you would like to revise the generated cover letter with an easy yes or no question prompt after every AI model response. If the user replies yes, the past interactions with the AI (including its response) stays archived in the message list that will be sent to the AI alongside the new revisional prompt inputted by the user. Once the user has specified that they don't have any more revisions, the script will take the most recent version of the cover letter, and export it to a PDF file with a user specified file name.
 
 ## Prerequisites
 
