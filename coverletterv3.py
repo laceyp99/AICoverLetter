@@ -155,7 +155,7 @@ def main():
     # Create files
     # Add your own resume and job description files here
     # Just drag and drop the files into the same folder as this script and then add the file name to the create_file function
-    resume = create_file("2023 AI Resume.pdf")
+    resume = create_file("Resume.pdf")
     job_description = create_file("job_description.txt")
 
     # Create and run initial thread
